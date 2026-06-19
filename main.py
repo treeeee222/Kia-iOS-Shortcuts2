@@ -28,11 +28,13 @@ if missing:
     raise ValueError(f"Missing environment variables: {', '.join(missing)}")
 
 # =========================
-# Vehicle Manager
+# Vehicle Manager Setup
 # =========================
+# Using explicit string types forces the underlying library to point to
+# the updated USA endpoint maps instead of generic index integers.
 vehicle_manager = VehicleManager(
-    region=3,  # North America
-    brand=1,   # KIA
+    region="USA",  
+    brand="kia",   
     username=USERNAME,
     password=PASSWORD,
     pin=str(PIN)
