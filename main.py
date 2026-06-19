@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request, jsonify
-from hyundai_kia_connect_api import VehicleManager, ClimateRequestOptions
+# Added Region and Brand imports to prevent the 500 startup crash
+from hyundai_kia_connect_api import VehicleManager, ClimateRequestOptions, Region, Brand
 from hyundai_kia_connect_api.exceptions import AuthenticationError
 
 app = Flask(__name__)
@@ -30,15 +31,18 @@ if missing:
 # =========================
 # Vehicle Manager Setup
 # =========================
-# Using explicit string types forces the underlying library to point to
-# the updated USA endpoint maps instead of generic index integers.
-vehicle_manager = VehicleManager(
-    region="USA",  
-    brand="kia",   
-    username=USERNAME,
-    password=PASSWORD,
-    pin=str(PIN)
-)
+# Using the library's official internal definitions fixes the 500 error
+# while correctly routing your login to the North American backend.
+try:
+    vehicle_manager = VehicleManager(
+        region=Region.USA,  
+        brand=Brand.KIA,   
+        username=USERNAME,
+        password=PASSWORD,
+        pin=str(PIN)
+    )
+except Exception as init_error:
+    print(f"Failed to initialize VehicleManager: {init_error}")
 
 # =========================
 # Helper Functions
@@ -50,7 +54,6 @@ def authorize_request():
 def ensure_authenticated():
     """
     Attempt to refresh Kia token.
-    Will fail if Kia requires OTP / captcha.
     """
     try:
         vehicle_manager.check_and_refresh_token()
