@@ -1,9 +1,8 @@
 import os
 from flask import Flask, request, jsonify
-from hyundai_kia_connect_api import VehicleManager, ClimateRequestOptions, Region, Brand
+from hyundai_kia_connect_api import VehicleManager, ClimateRequestOptions
 from hyundai_kia_connect_api.exceptions import AuthenticationError
 
-# This MUST be at the top level on line 7 with no indentation
 app = Flask(__name__)
 
 # =========================
@@ -27,10 +26,11 @@ if missing:
 # =========================
 # Vehicle Manager Setup
 # =========================
+# Reverting to direct, standard initialization parameters to fix the 500 import error
 try:
     vehicle_manager = VehicleManager(
-        region=Region.USA,  
-        brand=Brand.KIA,   
+        region=3,  
+        brand=1,   
         username=USERNAME,
         password=PASSWORD,
         pin=str(PIN)
