@@ -1,76 +1,49 @@
-# =========================
-# Environment Variables
-# =========================
-# This code now looks for "Keys" (labels) on your server, 
-# not your personal information.
+import os
+from flask import Flask, request, jsonify
+from hyundai_kia_connect_api import VehicleManager, ClimateRequestOptions
+
+app = Flask(__name__)
+
+# Environment Variables - These pull from your Render Dashboard
 USERNAME = os.environ.get("KIA_USERNAME")
 PASSWORD = os.environ.get("KIA_PASSWORD")
 PIN = os.environ.get("KIA_PIN")
 SECRET_KEY = os.environ.get("SECRET_KEY")
 VEHICLE_ID = os.environ.get("VEHICLE_ID")
 
-# This ensures the code stops if you forgot to add the keys on Render
-missing = []
-if not USERNAME: missing.append("KIA_USERNAME")
-if not PASSWORD: missing.append("KIA_PASSWORD")
-if not PIN: missing.append("KIA_PIN")
-if not SECRET_KEY: missing.append("SECRET_KEY")
+vehicle_manager = VehicleManager(region=3, brand=1, username=USERNAME, password=PASSWORD, pin=str(PIN))
 
-if missing:
-    raise ValueError(f"Missing variables: {', '.join(missing)}")
-
-
-# =========================
-# Vehicle Manager Setup
-# =========================
-# Reverting to direct, standard initialization parameters to fix the 500 import error
-try:
-    vehicle_manager = VehicleManager(
-        region=3,  
-        brand=1,   
-        username=Cherelle.jarman33@yahoo.com,
-        password=Jarman4375,
-        pin=str(4375)
-    )
-except Exception as init_error:
-    print(f"Failed to initialize VehicleManager: {init_error}")
-
-# =========================
-# Helper Functions
-# =========================
 def authorize_request():
     return request.headers.get("Authorization") == SECRET_KEY
 
-def ensure_authenticated():
+@app.route("/start_climate", methods=["POST"])
+def start_climate():
+    if not authorize_request():
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json() or {}
+    try:
+        user_temp = int(data.get("temp", 72))
+    except ValueError:
+        user_temp = 72
+    # Safety Net: Ensure temp is between 62 and 82
+    safe_temp = max(62, min(82, user_temp))
     try:
         vehicle_manager.check_and_refresh_token()
-    except AuthenticationError as e:
-        raise AuthenticationError("Kia authentication failed. Check 2FA.") from e
+        vehicle_id = VEHICLE_ID or next(iter(vehicle_manager.vehicles.keys()))
+        options = ClimateRequestOptions(set_temp=safe_temp, climate=True, heating=True)
+        vehicle_manager.start_climate(vehicle_id, options)
+        return jsonify({"status": "Success", "temp": safe_temp}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-def refresh_and_sync():
-    ensure_authenticated()
-    vehicle_manager.update_all_vehicles_with_cached_state()
-
-def get_vehicle_id():
-    if VEHICLE_ID:
-        return VEHICLE_ID
-    vehicles = vehicle_manager.vehicles
-    if not vehicles:
-        raise ValueError("No vehicles found.")
-    return next(iter(vehicles.keys()))
-
-@app.before_request
-def log_request_info():
-    print(f"Incoming request: {request.method} {request.path}")
-
-# =========================
-# Routes
-# =========================
-@app.route("/", methods=["GET"])
-def root():
-    return jsonify({"status": "OK", "service": "Kia Vehicle Control API"}), 200
-
-@app.route("/auth_status", methods=["GET"])
-def auth_status():
+@app.route("/unlock_car", methods=["POST"])
+def unlock_car():
     if not authorize_request():
-        return jsonify({"error": "
+        return jsonify({"error": "Unauthorized"}), 401
+    try:
+        vehicle_manager.check_and_refresh_token()
+        vehicle_id = VEHICLE_ID or next(iter(vehicle_manager.vehicles.keys()))
+        vehicle_manager.unlock(vehicle_id)
+        return jsonify({"status": "Unlocked"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
