@@ -1,3 +1,4 @@
-Flask
-hyundai_kia_connect_api==3.9.0
-requests
+flask
+hyundai-kia-connect-api
+cloudscraper
+gunicorn
