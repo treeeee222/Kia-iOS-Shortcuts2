@@ -1,27 +1,24 @@
-import os
-from flask import Flask, request, jsonify
-from hyundai_kia_connect_api import VehicleManager, ClimateRequestOptions
-from hyundai_kia_connect_api.exceptions import AuthenticationError
-
-app = Flask(__name__)
-
 # =========================
 # Environment Variables
 # =========================
-USERNAME = os.environ.get("Cherelle.jarman33@yahoo.com")
-PASSWORD = os.environ.get("Jarman4375")
-PIN = os.environ.get("4375")
-SECRET_KEY = os.environ.get("Y9fYS9GaC5zn0MCoxMOmeYVd9sGYsN3S-13zm87StHk")
+# This code now looks for "Keys" (labels) on your server, 
+# not your personal information.
+USERNAME = os.environ.get("KIA_USERNAME")
+PASSWORD = os.environ.get("KIA_PASSWORD")
+PIN = os.environ.get("KIA_PIN")
+SECRET_KEY = os.environ.get("SECRET_KEY")
 VEHICLE_ID = os.environ.get("VEHICLE_ID")
 
+# This ensures the code stops if you forgot to add the keys on Render
 missing = []
-if not USERNAME: missing.append("Cherelle.jarman33@yahoo.com")
-if not PASSWORD: missing.append("Jarman4375")
-if not PIN: missing.append("4375")
-if not SECRET_KEY: missing.append("Y9fYS9GaC5zn0MCoxMOmeYVd9sGYsN3S-13zm87StHk")
+if not USERNAME: missing.append("KIA_USERNAME")
+if not PASSWORD: missing.append("KIA_PASSWORD")
+if not PIN: missing.append("KIA_PIN")
+if not SECRET_KEY: missing.append("SECRET_KEY")
 
 if missing:
     raise ValueError(f"Missing variables: {', '.join(missing)}")
+
 
 # =========================
 # Vehicle Manager Setup
