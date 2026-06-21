@@ -2,15 +2,17 @@ import os
 from flask import Flask, request, jsonify
 from hyundai_kia_connect_api import VehicleManager, ClimateRequestOptions
 
+# This is the line Gunicorn is looking for
 app = Flask(__name__)
 
-# Environment Variables - These pull from your Render Dashboard
+# Environment Variables
 USERNAME = os.environ.get("KIA_USERNAME")
 PASSWORD = os.environ.get("KIA_PASSWORD")
 PIN = os.environ.get("KIA_PIN")
 SECRET_KEY = os.environ.get("SECRET_KEY")
 VEHICLE_ID = os.environ.get("VEHICLE_ID")
 
+# Initialize Vehicle Manager
 vehicle_manager = VehicleManager(region=3, brand=1, username=USERNAME, password=PASSWORD, pin=str(PIN))
 
 def authorize_request():
@@ -25,7 +27,6 @@ def start_climate():
         user_temp = int(data.get("temp", 72))
     except ValueError:
         user_temp = 72
-    # Safety Net: Ensure temp is between 62 and 82
     safe_temp = max(62, min(82, user_temp))
     try:
         vehicle_manager.check_and_refresh_token()
